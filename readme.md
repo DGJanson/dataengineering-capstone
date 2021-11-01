@@ -6,17 +6,17 @@ The project uses Spark to read in two big datasets and some helper data. The big
 
 #### The data
 
-The mortality data are from the [European Data Portal]{https://data.europa.eu/en}, a site that collects all kinds of open data from the EU. The data are in xml format and describe the number of deaths per region, age group and gender.
+The mortality data are from the [European Data Portal](https://data.europa.eu/en), a site that collects all kinds of open data from the EU. The data are in xml format and describe the number of deaths per region, age group and gender.
 
-The weather data are from a study which published their data: [Angelova, Denitsa; Blanco, Norman (2020), “Meteorological indicator dataset for selected European NUTS 3 regions ”, Mendeley Data, V2, doi: 10.17632/sf9x4h5jfk.2]{https://data.mendeley.com/datasets/sf9x4h5jfk/2}. These come in the form of several csvs, one per country.
+The weather data are from a study which published their data: [Angelova, Denitsa; Blanco, Norman (2020), “Meteorological indicator dataset for selected European NUTS 3 regions ”, Mendeley Data, V2, doi: 10.17632/sf9x4h5jfk.2](https://data.mendeley.com/datasets/sf9x4h5jfk/2). These come in the form of several csvs, one per country.
 
-All location data in the above sets is based on the NUTS system. A [European standard for dividing the continent into regions]{https://ec.europa.eu/eurostat/web/nuts/background}. We read in this standard as supporting data.
+All location data in the above sets is based on the NUTS system. A [European standard for dividing the continent into regions](https://ec.europa.eu/eurostat/web/nuts/background). We read in this standard as supporting data.
 
 Finally, we have create some data on dates. Specifically, we want information on weeks, since the mortality data is on a weekly basis; the weather data is on a monthly basis.
 
 ## The application
 
-The application tries to utilize the powerful possibilities of [Apache Spark]{https://spark.apache.org/}. More specifically, pyspark, in which Spark is run via python. The main chunk of this application is the python script that imports the necessary data into a database.
+The application tries to utilize the powerful possibilities of [Apache Spark](https://spark.apache.org/). More specifically, pyspark, in which Spark is run via python. The main chunk of this application is the python script that imports the necessary data into a database.
 
 This repository contains all code required to perform a test run with test data. Though a database (Postgres preferably) is required. The code in this repo can also be used to read in the complete datasets, but it still only runs a local Spark session and imports into a postgres database. At the end of this readme some recommendations are given as to how to use this script to run on a multitude of data, as required by the rubric of the capstone project. In theory the script is able to run fully on a clustered Spark session and a distributed database like RedShift from Amazon. Though this does require some configuration by the user of this project.
 
