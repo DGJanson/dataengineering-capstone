@@ -4,6 +4,7 @@ import os
 import sys
 
 from .configReader import readConfig
+from .sparkifier import initConversion
 
 """
     Main entry point of module
@@ -50,4 +51,12 @@ if __name__ == "__main__":
     except ValueError as ve:
         logger.error("Error while configuring ETL run. Message:")
         logger.error(ve)
+        sys.exit(0)
+
+    # we are ready for conversion now. Use the sparkifier script, simply pass it the config
+    try:
+        initConversion(config)
+    except Exception as err:
+        logger.error("Unknown error during conversion. This should not happen actually. Good luck debugging. Message:")
+        logger.error(err)
         sys.exit(0)
