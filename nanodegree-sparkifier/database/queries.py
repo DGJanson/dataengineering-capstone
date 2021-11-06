@@ -84,7 +84,35 @@ def createCreateQueries(listOfTableNames):
       snow float,
       CONSTRAINT pk_weather PRIMARY KEY (year, month, nuts)
     )
-    """
+    """.format(listOfTableNames[1])
     listToReturn.append(weatherQuery)
+
+    # nuts
+    nutsQuery = """
+    CREATE TABLE IF NOT EXISTS {} (
+      country_code char(2),
+      country_name text,
+      region_code char(3),
+      region_name text,
+      province_code char(4),
+      province_name text,
+      area_code char(5),
+      area_name text,
+      CONSTRAINT pk_nuts PRIMARY KEY(country_code, region_code, province_code, area_code)
+    )
+    """.format(listOfTableNames[2])
+    listToReturn.append(nutsQuery)
+
+    # dates
+    datesQuery = """
+    CREATE TABLE IF NOT EXISTS {} (
+      date date,
+      month int,
+      week int,
+      year int,
+      CONSTRAINT pk_dates PRIMARY KEY(date)
+    )
+    """.format(listOfTableNames[3])
+    listToReturn.append(datesQuery)
 
     return(listToReturn)

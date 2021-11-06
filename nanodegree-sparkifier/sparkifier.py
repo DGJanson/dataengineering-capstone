@@ -4,8 +4,9 @@ order, hopefully.
 """
 
 import logging
+import sys
 
-from .database.connection import createConnection
+from .database.connection import createConnection, performQueryNoResult
 from .database.queries import getTableNames, createDropQueries, createCreateQueries
 
 logger = logging.getLogger("sparkifier")
@@ -16,13 +17,37 @@ def setupDatabase(config):
     Args:
         config (dict): the config with the settings
     """
-    connection = createConnection(config)
-    logger.info(connection.get_dsn_parameters())
+    try:
+        connection = createConnection(config)
+        logger.info("Database connection setup with: {}".format(connection.get_dsn_parameters()))
+    except ValueError as err:
+        logger.error("Could not connect to database. Exiting")
+        sys.exit(0)
 
-    connection.close()
     listOfTableNames = getTableNames(config)
-    print(createDropQueries(listOfTableNames))
-    print(createCreateQueries(listOfTableNames))
+
+    if config["database"]["dropTablesFirst"] == "true":
+        logger.info("Dropping existing tables if they exist")
+        try:
+            for query in createDropQueries(listOfTableNames):
+                performQueryNoResult(connection, query)
+            connection.commit()
+            logger.info("Succesfully dropped tables")
+        except ValueError as ve:
+            logger.error("Problem while dropping tables. See logging for more details.")
+
+    if config["database"]["createTablesFirst"] == "true":
+        logger.info("Creating tables if they do not exist")
+        try:
+            for query in createCreateQueries(listOfTableNames):
+                performQueryNoResult(connection, query)
+            connection.commit()
+            logger.info("Succesfully created tables")
+        except ValueError as ve:
+            logger.error("Problem while creating tables. See logging for more details.")
+
+    # always close the connection :)
+    connection.close()
 
 
 def initConversion(config):

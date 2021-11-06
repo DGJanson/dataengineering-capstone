@@ -64,7 +64,7 @@ def readDatabaseConfig(config, dict):
         Read database (connection) settings
         By default we assume a local postgres install with ident authentication
     """
-    # readConfOrDefault(config, dict, "database", "url", default="jdbc:postgresql://localhost:5432/capstone")
+    # connection settings
     readConfOrDefault(config, dict, "database", "host", default="localhost")
     readConfOrDefault(config, dict, "database", "port", default="5432")
     readConfOrDefault(config, dict, "database", "database", default="capstone")
@@ -72,6 +72,11 @@ def readDatabaseConfig(config, dict):
     readConfOrDefault(config, dict, "database", "username", failIfAbsent = True)
     readConfOrDefault(config, dict, "database", "password", failIfAbsent = True)
 
+    # action settings
+    readConfOrDefault(config, dict, "database", "dropTablesFirst", default="true")
+    readConfOrDefault(config, dict, "database", "createTablesFirst", default="true")
+
+    # table name settings
     readConfOrDefault(config, dict, "database", "table_prefix")
     readConfOrDefault(config, dict, "database", "table_mortality", default="mortality")
     readConfOrDefault(config, dict, "database", "table_weather", default="weather")

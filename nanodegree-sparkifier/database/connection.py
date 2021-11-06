@@ -32,3 +32,26 @@ def createConnection(config):
         logger.error("Could not connect to database. Message:")
         logger.error(err)
         raise ValueError("Generic exception while trying to connect to database")
+
+def performQueryNoResult(conn, query):
+    """
+    Simply performs the query on the connection. Does not return anything.
+    This method will create a cursor and close it.
+
+    Args:
+        query (string): A query to perform using the passed connection
+
+    Raise:
+        ValueError: in case anything goes wrong
+
+    Returns:
+        nothing
+    """
+    try:
+        cursor = conn.cursor()
+        cursor.execute(query)
+        cursor.close()
+    except Exception as err:
+        logger.error("Error while executing query: {}. Message:".format(query))
+        logger.error(err)
+        raise ValueError("Error performing query")
