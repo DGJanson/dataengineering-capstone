@@ -50,6 +50,9 @@ def readSparkConfig(config, dict):
     readConfOrDefault(config, dict, "spark", "url", default="local")
     readConfOrDefault(config, dict, "spark", "appname", default="sparkifier")
 
+    # jars
+    readConfOrDefault(config, dict, "spark", "postgres-jar", default="./jars/postgresql-42.3.1.jar")
+
 def readDataConfig(config, dict):
     """
         Read the location of the data files
@@ -72,6 +75,8 @@ def readDatabaseConfig(config, dict):
 
     readConfOrDefault(config, dict, "database", "username", failIfAbsent = True)
     readConfOrDefault(config, dict, "database", "password", failIfAbsent = True)
+
+    readConfOrDefault(config, dict, "database", "driver", default="org.postgresql.Driver")
 
     # action settings
     readConfOrDefault(config, dict, "database", "dropTablesFirst", default="true")

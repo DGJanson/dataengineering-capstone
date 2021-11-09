@@ -9,6 +9,8 @@ import sys
 from .database.connection import createConnection, performQueryNoResult
 from .database.queries import getTableNames, createDropQueries, createCreateQueries
 
+from .data.converter import startConversion
+
 from .spark.session import createSparkSession
 
 logger = logging.getLogger("sparkifier")
@@ -77,6 +79,7 @@ def initConversion(config):
         sys.exit(0)
 
     # start doing conversions
+    startConversion(config, spark)
 
     # clean up stuff
     spark.stop()

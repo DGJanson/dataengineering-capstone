@@ -55,3 +55,21 @@ def performQueryNoResult(conn, query):
         logger.error("Error while executing query: {}. Message:".format(query))
         logger.error(err)
         raise ValueError("Error performing query")
+
+def getSparkDBProps(config):
+    """
+    Create a url and properties dict that spark can use to connect to the (postgres) database
+
+    Args:
+        config (dict): config as read by config reader
+
+    Returns:
+        tuple: 1st item is url to connect spark to database 2nd is property dict that spark can use
+    """
+    url = "jdbc:postgresql://{}:{}/{}".format(config["database"]["host"], config["database"]["port"], config["database"]["database"])
+    dbProps = {}
+    dbProps["user"] = config["database"]["username"]
+    dbProps["password"] = config["database"]["password"]
+    dbProps["driver"] = config["database"]["driver"]
+
+    return (url, dbProps)

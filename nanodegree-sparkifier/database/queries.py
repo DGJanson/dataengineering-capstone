@@ -10,7 +10,7 @@ def getTableNames(config):
         confg (dict): the dict with the config settings of this script
 
     Returns:
-        list: a list of tablenames
+        list: a list of tablenames in this order: mortality, weather, nuts, dates
     """
     tableNamesList = []
     tableNamesList.append(config["database"]["table_prefix"] + config["database"]["table_mortality"])
@@ -90,15 +90,12 @@ def createCreateQueries(listOfTableNames):
     # nuts
     nutsQuery = """
     CREATE TABLE IF NOT EXISTS {} (
-      country_code char(2),
+      nuts_code char(5),
       country_name text,
-      region_code char(3),
       region_name text,
-      province_code char(4),
       province_name text,
-      area_code char(5),
       area_name text,
-      CONSTRAINT pk_nuts PRIMARY KEY(country_code, region_code, province_code, area_code)
+      CONSTRAINT pk_nuts PRIMARY KEY(nuts_code)
     )
     """.format(listOfTableNames[2])
     listToReturn.append(nutsQuery)
