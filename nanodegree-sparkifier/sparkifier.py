@@ -9,6 +9,8 @@ import sys
 from .database.connection import createConnection, performQueryNoResult
 from .database.queries import getTableNames, createDropQueries, createCreateQueries
 
+from .spark.session import createSparkSession
+
 logger = logging.getLogger("sparkifier")
 
 def setupDatabase(config):
@@ -64,3 +66,19 @@ def initConversion(config):
 
     # database stuff
     setupDatabase(config)
+
+    # spark stuff
+    try:
+        spark = createSparkSession(config)
+        logger.info("Initialized Spark Session")
+    except Exception as err:
+        logger.error("Error while creating Spark session. Exiting program. Error:")
+        logger.error(err)
+        sys.exit(0)
+
+    # start doing conversions
+
+    # clean up stuff
+    spark.stop()
+
+    sys.exit(0)

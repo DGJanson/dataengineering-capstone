@@ -47,7 +47,8 @@ def readSparkConfig(config, dict):
         Defaults to local mode.
         todo: add settings for setting up spark cluster
     """
-    readConfOrDefault(config, dict, "spark", "mode", default="local")
+    readConfOrDefault(config, dict, "spark", "url", default="local")
+    readConfOrDefault(config, dict, "spark", "appname", default="sparkifier")
 
 def readDataConfig(config, dict):
     """
