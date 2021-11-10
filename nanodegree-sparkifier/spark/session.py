@@ -25,10 +25,16 @@ def createSparkSession(config):
     if postgresJarPath.startswith(r"./"):
         postgresJarPath = os.path.join(os.getcwd(), postgresJarPath)
 
+    databricksXmlJarPath = config["spark"]["databricks-xml-jar"]
+    if databricksXmlJarPath.startswith(r"./"):
+        databricksXmlJarPath = os.path.join(os.getcwd(), databricksXmlJarPath)
+
+    jars = postgresJarPath + "," + databricksXmlJarPath
+
     spark = SparkSession.builder \
         .master(config["spark"]["url"]) \
         .appName(config["spark"]["appname"]) \
-        .config("spark.jars", postgresJarPath) \
+        .config("spark.jars", jars) \
         .getOrCreate()
 
     return(spark)

@@ -52,6 +52,7 @@ def readSparkConfig(config, dict):
 
     # jars
     readConfOrDefault(config, dict, "spark", "postgres-jar", default="./jars/postgresql-42.3.1.jar")
+    readConfOrDefault(config, dict, "spark", "databricks-xml-jar", default="./jars/spark-xml_2.12-0.14.0.jar")
 
 def readDataConfig(config, dict):
     """

@@ -11,6 +11,7 @@ from ..database.connection import getSparkDBProps
 
 from .nutsdata import importNuts
 from .weatherdata import importWeather
+from .mortalitydata import importMortality
 
 
 
@@ -66,9 +67,10 @@ def startConversion(config, spark):
     tableNames = getTableNames(config)
 
     # mortality data
+    importMortality(fileDirs[0], databasePropsForSpark, tableNames[0], spark)
 
     # weather data
-    importWeather(fileDirs[1], databasePropsForSpark, tableNames[1], spark)
+    # importWeather(fileDirs[1], databasePropsForSpark, tableNames[1], spark)
 
     # nuts data
     # importNuts(fileDirs[2], databasePropsForSpark, tableNames[2], spark)

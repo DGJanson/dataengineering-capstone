@@ -63,6 +63,7 @@ def createCreateQueries(listOfTableNames):
       year integer,
       week integer,
       nuts varchar(5),
+      sex varchar(1),
       minage integer,
       maxage integer,
       number integer,

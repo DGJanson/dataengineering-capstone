@@ -37,7 +37,7 @@ def importWeather(weatherFolder, dbProps, tableName, spark):
     Args:
         weatherFolder (string): where to find weather data
         dbProps (tuple): database connection settings as provided by the getSparkDBProps method
-        tableName (string): name of the nuts table in the database
+        tableName (string): name of the weather table in the database
         spark (SparkSession): spark session to use
 
     Returns:
