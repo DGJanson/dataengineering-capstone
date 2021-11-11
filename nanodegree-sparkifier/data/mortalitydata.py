@@ -77,13 +77,32 @@ def importMortality(mortalityFolder, dbProps, tableName, spark):
                       .option("rowTag", "data:Series") \
                       .load(mortalityFile)
 
+        logger.info(mortDf.show(20))
+
         # this gives us a nested data structure, use explode function (see import) to make a row for each observation
         # but first let us select what we actually need
 
-        # select on level 3 nuts. that means a 5 char nuts
-        # use the spark sql function length
-        mortDf = mortDf.filter(length(mortDf["_geo"]) == 5)
-        mortDf = mortDf.filter(col("_age").rlike("\d\d?-\d\d") | col("_age").rlike("\d\d\+"))
+        # sselect the lists that:
+        # - have an age
+        # - have level 3 nuts (5 characters)
+        # - M and F seperately (it also contains rows with gender data summed)
+        # or operator and isin only work with col function...
+        mortDf = mortDf.filter(length(mortDf["_geo"]) == 5) \
+                       .filter((col("_sex") == "M") | (col("_sex") == "F")) \
+                       .filter(col("_age").isin([ \
+                           "Y_LT10", \
+                           "Y10-19", \
+                           "Y20-29", \
+                           "Y30-39", \
+                           "Y40-49", \
+                           "Y50-59", \
+                           "Y60-69", \
+                           "Y70-79", \
+                           "Y80-89", \
+                           "Y_GE90"  \
+                       ]))
+
+        logger.info(mortDf.show(20))
 
         # now explode some stuff
         mortDf = mortDf.withColumn("zip", arrays_zip(mortDf["data:Obs"]))
@@ -98,23 +117,26 @@ def importMortality(mortalityFolder, dbProps, tableName, spark):
                                mortDf["_age"], \
                                mortDf["col"]["data:Obs"]["_OBS_VALUE"].alias("mortNr"))
 
+        logger.info("Finished exploding.")
+
         # split the age and period data using udfs
         getLeftInt = udf(lambda i: findLeftSide(i), StringType())
         getRightInt = udf(lambda i: findRightSide(i), StringType())
         mortDf = mortDf.withColumn("Year", getLeftInt(mortDf["period"])) \
-                       .withColumn("Week", getRightInt(mortDf["period"])) \
-                       .withColumn("minAge", getLeftInt(mortDf["_age"])) \
-                       .withColumn("maxAge", getRightInt(mortDf["_age"]))
+                       .withColumn("Week", getRightInt(mortDf["period"]))
+
+        logger.info("Finished splitting")
 
         # put in right order one final time and write to database
-        mortDf = mortDf.select(mortDf["Year"], \
-                               mortDf["Week"], \
-                               mortDf["_geo"], \
-                               mortDf["_sex"], \
-                               mortDf["minAge"], \
-                               mortDf["maxAge"], \
-                               mortDf["mortNr"])
+        mortDf = mortDf.select(mortDf["Year"].alias("year").cast(IntegerType()), \
+                               mortDf["Week"].alias("week").cast(IntegerType()), \
+                               mortDf["_geo"].alias("nuts"), \
+                               mortDf["_sex"].alias("sex"), \
+                               mortDf["_age"].alias("age"), \
+                               mortDf["mortNr"].alias("number").cast(IntegerType()))
 
-        mortDf.write.jdbc(dbProps[0], tableName, properties = dbProps[1], mode = "overwrite")
+        logger.info("Ready to write")
+
+        mortDf.write.jdbc(dbProps[0], tableName, properties = dbProps[1], mode = "append")
 
     logger.info("Finished importing mortality data")

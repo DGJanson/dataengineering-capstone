@@ -64,12 +64,11 @@ def createCreateQueries(listOfTableNames):
       week integer,
       nuts varchar(5),
       sex varchar(1),
-      minage integer,
-      maxage integer,
-      number integer,
-      CONSTRAINT pk_mortality PRIMARY KEY(year, week, nuts)
+      age varchar(6),
+      number integer
     );
-    """.format(listOfTableNames[0])
+    CREATE INDEX ix_{} ON {} (year, week, nuts)
+    """.format(listOfTableNames[0], listOfTableNames[0], listOfTableNames[0])
     listToReturn.append(mortalityQuery)
 
     # weather
@@ -83,9 +82,9 @@ def createCreateQueries(listOfTableNames):
       mean_avgT float,
       precipitation float,
       snow float,
-      CONSTRAINT pk_weather PRIMARY KEY (year, month, nuts)
+      CONSTRAINT pk_{} PRIMARY KEY (year, month, nuts)
     )
-    """.format(listOfTableNames[1])
+    """.format(listOfTableNames[1], listOfTableNames[1])
     listToReturn.append(weatherQuery)
 
     # nuts
@@ -96,9 +95,9 @@ def createCreateQueries(listOfTableNames):
       region_name text,
       province_name text,
       area_name text,
-      CONSTRAINT pk_nuts PRIMARY KEY(nuts_code)
+      CONSTRAINT pk_{} PRIMARY KEY(nuts_code)
     )
-    """.format(listOfTableNames[2])
+    """.format(listOfTableNames[2], listOfTableNames[2])
     listToReturn.append(nutsQuery)
 
     # dates
@@ -108,9 +107,9 @@ def createCreateQueries(listOfTableNames):
       month int,
       week int,
       year int,
-      CONSTRAINT pk_dates PRIMARY KEY(date)
+      CONSTRAINT pk_{} PRIMARY KEY(date)
     )
-    """.format(listOfTableNames[3])
+    """.format(listOfTableNames[3], listOfTableNames[3])
     listToReturn.append(datesQuery)
 
     return(listToReturn)

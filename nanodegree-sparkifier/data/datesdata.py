@@ -34,8 +34,8 @@ def importDates(dbProps, tableName, spark):
         dateTuple = (datum, datum.month, datum.isocalendar()[1], datum.year)
         listOfTuples.append(dateTuple)
 
-    dateDf = spark.createDataFrame(data = listOfTuples)
+    dateDf = spark.createDataFrame(data = listOfTuples, schema = "date: date, month: int, week:int, year: int")
 
-    dateDf.write.jdbc(dbProps[0], tableName, properties = dbProps[1], mode = "overwrite")
+    dateDf.write.jdbc(dbProps[0], tableName, properties = dbProps[1], mode = "append")
 
     logger.info("Finished importing dates")

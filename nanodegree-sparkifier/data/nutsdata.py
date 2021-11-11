@@ -81,10 +81,14 @@ def importNuts(nutsFolder, dbProps, tableName, spark):
         substringLevelTwoUdf = udf(lambda code : code[0:4], StringType())
         nutsDf = nutsDf.withColumn("level_code", substringLevelTwoUdf(nutsDf["Code 2021"]))
         nutsDf = nutsDf.join(level2Df, nutsDf["level_code"] == level2Df["LevelCode"]) \
-            .select(nutsDf["Code 2021"], nutsDf["Country"], nutsDf["Nuts Level 1"], level2Df["Nuts Level 2"], nutsDf["Nuts level 3"])
+            .select(nutsDf["Code 2021"].alias("nuts_code"), \
+                    nutsDf["Country"].alias("country_name"), \
+                    nutsDf["Nuts Level 1"].alias("region_name"), \
+                    level2Df["Nuts Level 2"].alias("province_name"), \
+                    nutsDf["Nuts level 3"].alias("area_name"))
 
         logger.info(nutsDf.show(10))
 
-        nutsDf.write.jdbc(dbProps[0], tableName, properties = dbProps[1], mode = "overwrite")
+        nutsDf.write.jdbc(dbProps[0], tableName, properties = dbProps[1], mode = "append")
 
     logger.info("Imported nuts data")

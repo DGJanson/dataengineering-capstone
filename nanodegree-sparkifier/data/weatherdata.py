@@ -5,6 +5,8 @@ Script that reads the weather data into the database
 import logging
 import os
 
+from pyspark.sql.types import IntegerType, FloatType
+
 logger = logging.getLogger("sparkifier")
 
 def findWeatherFiles(weatherFolder):
@@ -50,16 +52,16 @@ def importWeather(weatherFolder, dbProps, tableName, spark):
         weatherDf = spark.read.option("header", True).csv(weatherFile)
 
         # do not need to do much, just select the correct columns in right order
-        weatherDf = weatherDf.select(weatherDf["YEAR"], \
-                                     weatherDf["MONTH"], \
-                                     weatherDf["NUTS"], \
-                                     weatherDf["Mean_MAX_T"], \
-                                     weatherDf["Mean_MIN_T"], \
-                                     weatherDf["Mean_AVG"], \
-                                     weatherDf["Mean_Pre"], \
-                                     weatherDf["Mean_snow"])
+        weatherDf = weatherDf.select(weatherDf["YEAR"].alias("year").cast(IntegerType()), \
+                                     weatherDf["MONTH"].alias("month").cast(IntegerType()), \
+                                     weatherDf["NUTS"].alias("nuts"), \
+                                     weatherDf["Mean_MAX_T"].alias("mean_maxT").cast(FloatType()), \
+                                     weatherDf["Mean_MIN_T"].alias("mean_minT").cast(FloatType()), \
+                                     weatherDf["Mean_AVG"].alias("mean_avgT").cast(FloatType()), \
+                                     weatherDf["Mean_Pre"].alias("precipitation").cast(FloatType()), \
+                                     weatherDf["Mean_snow"].alias("snow").cast(FloatType()))
 
         # import into the database
-        weatherDf.write.jdbc(dbProps[0], tableName, properties = dbProps[1], mode = "overwrite")
+        weatherDf.write.jdbc(dbProps[0], tableName, properties = dbProps[1], mode = "append")
 
     logger.info("Succesfully read in weather data")
