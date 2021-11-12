@@ -56,6 +56,31 @@ def performQueryNoResult(conn, query):
         logger.error(err)
         raise ValueError("Error performing query")
 
+def performQueryWithOneResult(conn, query):
+    """
+    Simply performs the query on the connection.
+    This method will create a cursor and close it.
+
+    Args:
+        query (string): A query to perform using the passed connection
+
+    Raise:
+        ValueError: in case anything goes wrong
+
+    Returns:
+        The single result
+    """
+    try:
+        cursor = conn.cursor()
+        cursor.execute(query)
+        result = cursor.fetchone()
+        cursor.close()
+        return result
+    except Exception as err:
+        logger.error("Error while executing query: {}. Message:".format(query))
+        logger.error(err)
+        raise ValueError("Error performing query")
+
 def getSparkDBProps(config):
     """
     Create a url and properties dict that spark can use to connect to the (postgres) database

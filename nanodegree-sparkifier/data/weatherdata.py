@@ -61,6 +61,8 @@ def importWeather(weatherFolder, dbProps, tableName, spark):
                                      weatherDf["Mean_Pre"].alias("precipitation").cast(FloatType()), \
                                      weatherDf["Mean_snow"].alias("snow").cast(FloatType()))
 
+        weatherDf = weatherDf.filter(weatherDf["year"].isNotNull())
+
         # import into the database
         weatherDf.write.jdbc(dbProps[0], tableName, properties = dbProps[1], mode = "append")
 
