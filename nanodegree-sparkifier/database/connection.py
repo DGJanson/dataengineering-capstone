@@ -4,6 +4,7 @@ Some methods for connecting to the database
 
 import psycopg2
 import logging
+import os
 
 logger = logging.getLogger("sparkifier")
 
@@ -39,6 +40,7 @@ def performQueryNoResult(conn, query):
     This method will create a cursor and close it.
 
     Args:
+        conn: connection to use for query
         query (string): A query to perform using the passed connection
 
     Raise:
@@ -62,6 +64,7 @@ def performQueryWithOneResult(conn, query):
     This method will create a cursor and close it.
 
     Args:
+        conn: connection to use for query
         query (string): A query to perform using the passed connection
 
     Raise:
@@ -80,6 +83,38 @@ def performQueryWithOneResult(conn, query):
         logger.error("Error while executing query: {}. Message:".format(query))
         logger.error(err)
         raise ValueError("Error performing query")
+
+def performQueryWriteToCsv(conn, query, fileLocation):
+    """
+    Performs a query and writes it to a csv.
+    Does not do batches or anything, so writes the entire output in one go.
+    (So do not make queries too big :))
+
+    Args:
+        conn: connection to use for query
+        query (string): the export query to perform. Pass a SELECT query, this method will output to csv
+        fileLocation: full path relative path (start with ./) to file to export. In case of relative path, will write to os.getcwd
+
+    Raises:
+        ValueError: in case anything goes wrong
+
+    Returns:
+        nothing
+    """
+    if fileLocation.startswith("./"):
+        fileLocation = os.path.join(os.getcwd(), fileLocation)
+
+    try:
+        cursor = conn.cursor()
+        outputQuery = "COPY ({}) TO STDOUT WITH CSV HEADER".format(query)
+        with open (fileLocation, "w") as outputFile:
+            cursor.copy_expert(outputQuery, outputFile)
+        cursor.close()
+    except Exception as err:
+        logger.error("Error while executing output query: {}. Message:".format(outputQuery))
+        logger.error(err)
+        raise ValueError("Error performing query")
+
 
 def getSparkDBProps(config):
     """

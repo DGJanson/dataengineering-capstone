@@ -80,6 +80,8 @@ def doQualityControlQueries(config):
                 logger.warning("Query {} did not return expected result {}".format(query, expectedResult))
         except ValueError as ve:
             logger.error("Problem while performing quality control queries.")
+        finally:
+            connection.close()
 
 def initConversion(config):
     """

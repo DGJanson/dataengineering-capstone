@@ -64,6 +64,8 @@ def readDataConfig(config, dict):
     """
     readConfOrDefault(config, dict, "data", "folder", default="./test-data")
 
+    readConfOrDefault(config, dict, "data", "outputfolder", default="./output")
+
 def readDatabaseConfig(config, dict):
     """
         Read database (connection) settings
