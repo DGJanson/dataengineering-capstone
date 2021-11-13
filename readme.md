@@ -6,7 +6,7 @@ The project uses Spark to read in two big datasets and some helper data. The big
 
 #### The data
 
-The mortality data are from the [European Data Portal](https://data.europa.eu/en), a site that collects all kinds of open data from the EU. The data are in xml format and describe the number of deaths per region, age group and gender.
+The mortality data are from the [European Data Portal](https://data.europa.eu/en), a site that collects all kinds of open data from the EU. The data are in xml format and describe the number of deaths per region, age group and gender. [Link to dataset](https://data.europa.eu/data/datasets/q0jvahp4pgzxufeucuvqw?locale=en).
 
 The weather data are from a study which published their data: [Angelova, Denitsa; Blanco, Norman (2020), “Meteorological indicator dataset for selected European NUTS 3 regions ”, Mendeley Data, V2, doi: 10.17632/sf9x4h5jfk.2](https://data.mendeley.com/datasets/sf9x4h5jfk/2). These come in the form of several csvs, one per country.
 
@@ -45,23 +45,74 @@ I chose postgres, since this is the closest to RedShift (a distributed database 
 
 #### The data model
 
-The main datamodel consists of 4 tables. These are defined in the **queries.py** script in this repo. In short:
+The main datamodel consists of 4 tables. These are defined in the **queries.py** script in this repo. The model is quite straight forward; all table definitions are quite close to the data in the import files. Since the datasets all use very similar data-formats, it is quite easy to join them together without elaborate tricks and data processing.
 
 ##### Mortality
 
 The mortality table holds a year, week and region (nuts code). In addition a gender (m/f) and age group column are defined. For each combination of these columns there is a number of deaths. The original xml file contains aggregated data per age and gender, but these numbers are **not** imported. Aggregations can be made again using the database. The resulting table contains about 15,000,000 rows.
 
+|Column     |Type      |
+|-----------|----------|
+|year       |integer   |
+|week       |integer   |
+|nuts       |varchar(5)|
+|sex        |varchar(1)|
+|age        |varchar(6)|
+|number     |integer   |
+
+*INDEX on (year, week, nuts)*
+
+An overview of the mortality data has been included in the output directory. It shows for each country how which years are available and how many rows there are.
+
 ##### Weather
 
 The weather table contains for each year, month and region (nuts) code: the mean maximum temperature, the mean minimum temperature, the mean average temperature, the mean precipitation and the mean snow (all decimal numbers). This table contains about 400,000 rows.
+
+|Column        |Type      |
+|--------------|----------|
+|year          |integer   |
+|month         |integer   |
+|nuts          |varchar(5)|
+|mean_maxT     |float     |
+|mean_minT     |float     |
+|mean_avgT     |float     |
+|precipitation |float     |
+|snow          |float     |
+
+*PRIMARY KEY on (year, month, nuts)*
+
+An overview of the weather data has been included in the output directory. It show for each country and year the number of measurements for that year.
 
 ##### Nuts data
 
 Nuts, or geographical data, is based on nuts codes. Since all our data is at the lowest level, we are only interested in the lowest level nuts codes: level 3. As such, the table is a list of 5 letter (level 3) nuts codes. For each code it holds the corresponding country, level 1 (region), level 2 (province) and level 3 (area) names.
 
+|Column        |Type      |
+|--------------|----------|
+|nuts_code     |char(5)   |
+|country_name  |text      |
+|region_name   |text      |
+|province_name |text      |
+|area_name     |text      |
+
+*PRIMARY KEY on (nuts_code)*
+
 ##### Dates data
 
 The dates data is simple: a is of dates from 2000-01-01 (that is when the mortality data starts) and for each date we have a week, month and year. We can use this table to match the weekly data of the mortality numbers to the monthly data of the weather data.
+
+|Column        |Type      |
+|--------------|----------|
+|date          |date      |
+|month         |integer   |
+|week          |integer   |
+|year          |integer   |
+
+*PRIMARY KEY on (date)*
+
+##### Joining the tables
+
+The data can be connected using the nuts codes and the year, month and week columns. To connect the mortality to the weather data you need to use the dates table to convert the week and year column of the mortality table to the month and year column of the weather data. Please find an example of a query for how to do this further below.
 
 #### The config file
 
@@ -79,6 +130,7 @@ The config file contains the following settings:
 **Data**
 
 - folder: where to look for the data files to import. The folder should contain 3 subfolders: mortality, weather and nuts. Default: ./test-data
+- outputfolder: where to output the overview and example data of the outputter. Default: ./output
 
 **Database**
 
@@ -100,6 +152,10 @@ The config file contains the following settings:
 
 - type: what kind of logging to use. Options are console and file. Default: console
 - logfile: if file logging type selected, we need a file to write log to. Will log to single file in append mode. Pass a path to file. No default.
+
+## Quality checks
+
+There are some checks in the data for quality control. First, all tables except the mortality data contain a primary key to make sure data is only read once. Furthermore, after importing the data, two check queries are performed. The first simply checks if some weather data has been imported into the database. The other counts the number of age categories in the mortality data; we did not import the aggregated data, so we only expect 10 different age categories. Not more and not less. Finally, the outputter creates some overviews that can be checked manually. For example, the weather data contains the same number of measurements per year per country. And all these numbers are multiples of 12, implying all months were imported.
 
 ## How to use for analysis
 
@@ -130,6 +186,8 @@ SELECT mortalityAgg.*, weather.mean_maxT, weather.mean_minT, weather.mean_avgT, 
 FROM mortalityAgg JOIN weather ON mortalityAgg.year = weather.year AND mortalityAgg.month = weather.month AND mortalityAgg.nuts = weather.nuts;
 ```
 
+The output of this query is included in the output directory of this repo.
+
 ## Scaling up
 
 Say we have a lot more of data to add to the database, 100x more according to the rubric. This would mean that we need to migrate to a cloud environment. First off, Spark would need to run on a strong cluster, since a single laptop takes quite a while to even import the regular dataset apparently. The script should be adapted to run on a clustered instance, but hopefully that is quite easy to achieve.
@@ -138,7 +196,12 @@ The harder part will be to change the database. I think a distributed, columnar 
 
 If the above is clear the tables can be created in Redshift. The nuts and dates tables are small and should be stored on every shard of the database. The weather and mortality data can be partitioned as described above, though care should be taken to include gender and age in the partition key for mortality.
 
-The etl process can be run daily, but it is advisable to include a mechanism to check which files have been read.
+To ensure availability in case of hundreds of users on this database I would advise to create multiple clusters. Depending on the type of analysis or application for the data different specs can be chosen for each cluster. Database-wise, Amazon has several options for creating replicas of the database, to ensure a database will be available for all users. In case of users from outside of Europe are interested in this data, different availability zones can be created. This will create a standby database in a different availability zones, which in turn can have replicas as well. The different clusters can also be deployed in different availability zones.
+
+To keep the ETL job able to run quickly, several improvements can be made:
+
+- The job can be cut in several parts. The imports of the different sources do not depend on each other, so they can be performed separately on different clusters.
+- The data can be cut in parts as well. It is not necessary to read in data twice, so a mechanism could be created to keep track of what data was imported already. Redshift does not support upserting directly, but several methods can be used. For example, you can keep track of the last date on which data was imported, and ignore all data before that date. Or you can keep track of which files were imported, for example by saving a list of imported files in S3, and only import files that were not previously imported.
 
 ## Known issues
 
