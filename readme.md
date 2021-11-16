@@ -203,6 +203,8 @@ To keep the ETL job able to run quickly, several improvements can be made:
 - The job can be cut in several parts. The imports of the different sources do not depend on each other, so they can be performed separately on different clusters.
 - The data can be cut in parts as well. It is not necessary to read in data twice, so a mechanism could be created to keep track of what data was imported already. Redshift does not support upserting directly, but several methods can be used. For example, you can keep track of the last date on which data was imported, and ignore all data before that date. Or you can keep track of which files were imported, for example by saving a list of imported files in S3, and only import files that were not previously imported.
 
+To make sure the pipelines are run on a daily basis an orchestration tool is needed. This can be Apache Airflow or a combination of Amazon options (assuming we are using Redshift by this time): Cloudwatch, Step functions, AWS Lambda and AWS batch. The main function of the orchestration tool is to schedule the import scripts and monitor their progress; so that they can be run daily before 7 am for example. If more efficiency is required, the above suggestions on how to cut the data into parts need to be combined with the orchestration tool. That would allow for more precise scoping of (and thus reducing) the data needed in the run and parallelize the execution of the different parts of the script. This is something that both tools can do.
+
 ## Known issues
 
 The quality checks are very basic. It is basically a quick check to see if data is present at all. A more dynamic process is preferable. Perhaps we can generate quality check queries based on the dataframe data from Spark?
